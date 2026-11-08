@@ -51,9 +51,10 @@ Convention collective : particuliers employeurs et emploi à domicile, **IDCC 32
 ## Infrastructure en place
 
 - **Supabase** : projet `hblkhcqphgojhnxgpdpd` (NounouApp, eu-west-2), accessible via le connecteur MCP Supabase.
-- **Vercel** : projet `nounouapp` (`prj_VapYmecBkpKkxIZIHKhVjznW6Qxd`, équipe `team_SGMxXsum4lWF8CjYEuyupn6p`), relié à `GregLCBG/nounouapp` : chaque push sur `main` déploie en production sur **https://nounouapp-alpha.vercel.app** (fonctions en `lhr1`, près de Supabase). Variables configurées : `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (reste `GOOGLE_AGENDA_ICAL_URL`).
+- **Vercel** : projet `nounouapp` (`prj_VapYmecBkpKkxIZIHKhVjznW6Qxd`, équipe `team_SGMxXsum4lWF8CjYEuyupn6p`), relié à `GregLCBG/nounouapp` : chaque push sur `main` déploie en production sur **https://nounouapp-alpha.vercel.app** (fonctions en `lhr1`, près de Supabase). Variables configurées : `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `GOOGLE_AGENDA_ICAL_URL` (chiffrée).
 - **E-mails d'authentification** : le SMTP intégré de Supabase n'envoie qu'aux membres de l'organisation Supabase (erreur `email_address_not_authorized` sinon) → un SMTP personnalisé est obligatoire pour que la nounou reçoive son lien.
-- **Google Agenda** : agenda dédié « Garde Blanche » sur le compte Google perso du propriétaire (ne jamais mélanger avec « Famille » : tout événement compte comme heures de garde).
+- **Google Agenda** : agenda dédié « Nounou Le Chanu » (`e21f2f61d26f9341c6fdb53c30e4b86ab180b93a18ff5cb33dab10a123c0cb53@group.calendar.google.com`) sur le compte Google perso du propriétaire, accessible via le connecteur Google Calendar. Ne jamais mélanger avec « Famille » : tout événement compte comme heures de garde. L'agenda doit refléter la réalité : un jour non travaillé (férié, vacances, maladie) = occurrence supprimée.
+- **Accès aux services** : Supabase, Vercel et Google Agenda passent par les connecteurs claude.ai (pas de `.mcp.json` ni de jetons dans l'environnement).
 
 ## Commandes
 

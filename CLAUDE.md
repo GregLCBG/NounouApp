@@ -51,7 +51,8 @@ Convention collective : particuliers employeurs et emploi à domicile, **IDCC 32
 ## Infrastructure en place
 
 - **Supabase** : projet `hblkhcqphgojhnxgpdpd` (NounouApp, eu-west-2), accessible via le connecteur MCP Supabase.
-- **Vercel** : projet `nounouapp` (`prj_VapYmecBkpKkxIZIHKhVjznW6Qxd`, équipe `team_SGMxXsum4lWF8CjYEuyupn6p`), relié à `GregLCBG/nounouapp` : chaque push sur `main` déploie en production. Variables configurées : `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (reste `GOOGLE_AGENDA_ICAL_URL`).
+- **Vercel** : projet `nounouapp` (`prj_VapYmecBkpKkxIZIHKhVjznW6Qxd`, équipe `team_SGMxXsum4lWF8CjYEuyupn6p`), relié à `GregLCBG/nounouapp` : chaque push sur `main` déploie en production sur **https://nounouapp-alpha.vercel.app** (fonctions en `lhr1`, près de Supabase). Variables configurées : `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (reste `GOOGLE_AGENDA_ICAL_URL`).
+- **E-mails d'authentification** : le SMTP intégré de Supabase n'envoie qu'aux membres de l'organisation Supabase (erreur `email_address_not_authorized` sinon) → un SMTP personnalisé est obligatoire pour que la nounou reçoive son lien.
 - **Google Agenda** : agenda dédié « Garde Blanche » sur le compte Google perso du propriétaire (ne jamais mélanger avec « Famille » : tout événement compte comme heures de garde).
 
 ## Commandes

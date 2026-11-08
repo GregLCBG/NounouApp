@@ -98,6 +98,32 @@ describe("écarts", () => {
   });
 });
 
+describe("mois d'embauche", () => {
+  const embauche: Contrat = { ...contrat, dateEffet: "2026-11-16" };
+
+  it("paie au prorata des heures prévues depuis la date d'effet", () => {
+    // Novembre 2026 complet : 17 jours à 2 h + 4 mercredis à 5 h = 54 h prévues.
+    // À partir du lundi 16 : 2 semaines de 13 h + lundi 30 (2 h) = 28 h.
+    const mois = "2026-11";
+    expect(contratPourMois([embauche], mois)).toBe(embauche);
+    const jours = construireJours(embauche, mois, presenceConforme(mois), {});
+    const reelles: Record<string, number> = {};
+    for (const j of jours) reelles[j.jour] = j.jour >= "2026-11-16" ? j.minutesPrevues : 0;
+    const recap = calculerMois(embauche, mois, construireJours(embauche, mois, reelles, {}));
+    expect(recap.joursNonQualifies).toEqual([]);
+    expect(recap.salaireBrutCentimes).toBe(Math.round((84500 * 28) / 54));
+    expect(recap.minutesPayees / 60).toBeCloseTo((56.333 * 28) / 54, 2);
+    expect(recap.alertes.some((a) => a.includes("embauche"))).toBe(true);
+  });
+
+  it("le mois suivant est payé en entier", () => {
+    const mois = "2026-12";
+    const recap = calculerMois(embauche, mois, construireJours(embauche, mois, presenceConforme(mois), {}));
+    expect(recap.salaireBrutCentimes).toBe(84500);
+    expect(recap.alertes).toEqual([]);
+  });
+});
+
 describe("versions du contrat", () => {
   it("prend la version en vigueur au 1er du mois", () => {
     const avenant: Contrat = { ...contrat, dateEffet: "2027-09-01", tauxHoraireBrutCentimes: 1600 };

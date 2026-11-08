@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { EnTete } from "@/components/EnTete";
 import { chargerMois } from "@/lib/donnees";
 import { euros, heures, jourLong } from "@/lib/format";
 import { jourParis } from "@/lib/paie/dates";
@@ -14,7 +15,7 @@ const LIBELLES_MOTIF: Record<string, string> = {
 export default function Accueil({ searchParams }: PageProps<"/">) {
   return (
     <main className="mx-auto w-full max-w-2xl p-4 sm:p-6">
-      <h1 className="mb-1 text-2xl font-semibold">Garde de Blanche</h1>
+      <EnTete actif="/" />
       <Suspense fallback={<p className="text-neutral-500">Chargement de l&apos;agenda…</p>}>
         <Mois searchParams={searchParams} />
       </Suspense>

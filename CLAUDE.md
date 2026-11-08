@@ -28,6 +28,7 @@ Convention collective : particuliers employeurs et emploi à domicile, **IDCC 32
   - absence du fait des parents (vacances, annulation) : pas de déduction ;
   - congés payés de la salariée : 2,5 jours ouvrables acquis par mois (période du 1er juin au 31 mai), salaire maintenu en année complète.
 - **Jours fériés, méthode exacte de déduction, liste exacte des champs du formulaire Pajemploi** : à vérifier sur les sources officielles (Pajemploi, texte de la CC 3239) avant de les coder. Ne pas improviser une règle de paie.
+- **Mois d'embauche** : si le contrat démarre en cours de mois, le salaire mensualisé est payé au prorata des heures prévues à partir de la date d'effet sur les heures prévues du mois complet (méthode des heures réelles, à valider avec Pajemploi).
 - Les paramètres du contrat (horaires, taux horaire, date d'effet) doivent être **versionnés par date**. Ils changeront avec les avenants, l'entrée en maternelle (septembre 2027) et le passage au CESU aux 6 ans de l'enfant.
 
 ## Architecture (cible)
@@ -74,5 +75,6 @@ npm run build
 - `src/lib/paie/` : moteur de paie pur (dates en chaînes `YYYY-MM-DD` heure de Paris, jours fériés, calcul mensuel). Toute règle de paie passe ici, avec un test.
 - `src/lib/agenda/` : lecture de l'agenda Google (iCal) → minutes de présence par jour. Les événements « journée entière » ne comptent pas comme heures.
 - `src/lib/donnees.ts` : assemble contrat + motifs (Supabase) + agenda → récap du mois.
-- `supabase/migrations/` : schéma SQL et RLS, appliqués sur le projet Supabase `hblkhcqphgojhnxgpdpd` via le connecteur MCP (`apply_migration`). Les fonctions d'aide RLS sont `SECURITY DEFINER`, donc rangées dans le schéma non exposé `prive`. Les comptes (3 personnes) et leur ligne `profils` sont créés à la main ; `signInWithOtp` utilise `shouldCreateUser: false`.
+- `supabase/migrations/` : schéma SQL et RLS, appliqués sur le projet Supabase `hblkhcqphgojhnxgpdpd` via le connecteur MCP (`apply_migration`). Les fonctions d'aide RLS sont `SECURITY DEFINER`, donc rangées dans le schéma non exposé `prive`. Les comptes et leur ligne `profils` sont créés à la main (actuellement : greg3102432@gmail.com et dorothe_leconte@hotmail.com = parents, gregoire@mykalios.com = nounou de test) ; `signInWithOtp` utilise `shouldCreateUser: false`.
+- **Documents** (`/documents`) : table `documents` + bucket Storage privé `documents`, chemin `<salarie_id | famille>/<uuid>.<ext>`. Parents : lecture/ajout/suppression de tout ; nounou : lecture de ses seuls documents (dossier = son `auth.uid()`). Téléversement direct navigateur → Storage (pas de Server Action, limite de taille). Téléchargement par URL signée 1 h. Le robot Pajemploi y déposera les bulletins.
 - Connexion par lien magique via `/auth/confirm?token_hash=…` : le modèle d'e-mail Supabase « Magic Link » doit pointer vers cette route.

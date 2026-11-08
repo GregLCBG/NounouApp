@@ -15,12 +15,14 @@ export function minutesHebdo(contrat: Contrat): number {
     .reduce((t, p) => t + minutesDepuisMinuit(p!.fin) - minutesDepuisMinuit(p!.debut), 0);
 }
 
-/** Choisit la version du contrat en vigueur au 1er du mois. */
+/**
+ * Choisit la version du contrat en vigueur au 1er du mois ; à défaut, le contrat qui
+ * démarre dans le mois (mois d'embauche, payé au prorata dans calculerMois).
+ */
 export function contratPourMois(contrats: Contrat[], mois: string): Contrat | undefined {
   const premier = `${mois}-01`;
-  return [...contrats]
-    .filter((c) => c.dateEffet <= premier)
-    .sort((a, b) => b.dateEffet.localeCompare(a.dateEffet))[0];
+  const tries = [...contrats].sort((a, b) => a.dateEffet.localeCompare(b.dateEffet));
+  return tries.filter((c) => c.dateEffet <= premier).at(-1) ?? tries.find((c) => c.dateEffet.startsWith(mois));
 }
 
 /**
@@ -34,7 +36,8 @@ export function construireJours(
   motifs: Record<string, JourPresence["motif"]>,
 ): JourPresence[] {
   return joursDuMois(mois).map((jour) => {
-    const minutesPrevues = minutesPrevuesLe(contrat, jour);
+    // Avant la date d'effet (mois d'embauche), rien n'est prévu.
+    const minutesPrevues = jour < contrat.dateEffet ? 0 : minutesPrevuesLe(contrat, jour);
     const ferie = nomFerie(jour);
     let motif = motifs[jour];
     const reelles = minutesReelles[jour] ?? 0;
@@ -87,11 +90,21 @@ export function calculerMois(contrat: Contrat, mois: string, jours: JourPresence
     }
   }
 
-  const salaireMensualiseBrut = (minutesMensualisees * contrat.tauxHoraireBrutCentimes) / 60;
-  const salaireMensualiseNet = (minutesMensualisees * contrat.tauxHoraireNetCentimes) / 60;
+  // Mois d'embauche : prorata des heures prévues à partir de la date d'effet sur les heures
+  // prévues du mois complet (même méthode des heures réelles que les absences — à valider).
+  const minutesPrevuesMoisComplet = joursDuMois(mois).reduce((t, j) => t + minutesPrevuesLe(contrat, j), 0);
+  const embaucheDansLeMois = contrat.dateEffet.startsWith(mois) && contrat.dateEffet > `${mois}-01`;
+  const partTravaillee =
+    embaucheDansLeMois && minutesPrevuesMoisComplet > 0 ? minutesPrevuesMois / minutesPrevuesMoisComplet : 1;
+  if (embaucheDansLeMois) {
+    alertes.push(`Mois d'embauche (début le ${contrat.dateEffet}) : salaire mensualisé payé au prorata des heures prévues.`);
+  }
+
+  const salaireMensualiseBrut = (minutesMensualisees * partTravaillee * contrat.tauxHoraireBrutCentimes) / 60;
+  const salaireMensualiseNet = (minutesMensualisees * partTravaillee * contrat.tauxHoraireNetCentimes) / 60;
   const partDeduite = minutesPrevuesMois > 0 ? minutesAbsenceDeduite / minutesPrevuesMois : 0;
-  // Exprimée en minutes pour le récap : part du temps mensualisé retirée.
-  const minutesDeduites = minutesMensualisees * partDeduite;
+  // Exprimée en minutes pour le récap : part du temps mensualisé retirée (prorata d'embauche compris).
+  const minutesDeduites = minutesMensualisees * (1 - partTravaillee * (1 - partDeduite));
 
   const brut =
     salaireMensualiseBrut * (1 - partDeduite) + (minutesComplementaires * contrat.tauxHoraireBrutCentimes) / 60;

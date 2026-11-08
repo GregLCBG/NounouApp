@@ -66,5 +66,5 @@ npm run build
 - `src/lib/paie/` : moteur de paie pur (dates en chaînes `YYYY-MM-DD` heure de Paris, jours fériés, calcul mensuel). Toute règle de paie passe ici, avec un test.
 - `src/lib/agenda/` : lecture de l'agenda Google (iCal) → minutes de présence par jour. Les événements « journée entière » ne comptent pas comme heures.
 - `src/lib/donnees.ts` : assemble contrat + motifs (Supabase) + agenda → récap du mois.
-- `supabase/migrations/` : schéma SQL et RLS, appliqués à la main dans le SQL Editor de Supabase. Les comptes (3 personnes) et leur ligne `profils` sont créés à la main ; `signInWithOtp` utilise `shouldCreateUser: false`.
+- `supabase/migrations/` : schéma SQL et RLS, appliqués sur le projet Supabase `hblkhcqphgojhnxgpdpd` via le connecteur MCP (`apply_migration`). Les fonctions d'aide RLS sont `SECURITY DEFINER`, donc rangées dans le schéma non exposé `prive`. Les comptes (3 personnes) et leur ligne `profils` sont créés à la main ; `signInWithOtp` utilise `shouldCreateUser: false`.
 - Connexion par lien magique via `/auth/confirm?token_hash=…` : le modèle d'e-mail Supabase « Magic Link » doit pointer vers cette route.

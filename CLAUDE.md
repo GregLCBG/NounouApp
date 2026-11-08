@@ -30,7 +30,7 @@ Convention collective : particuliers employeurs et emploi à domicile, **IDCC 32
 - **Jours fériés, méthode exacte de déduction, liste exacte des champs du formulaire Pajemploi** : à vérifier sur les sources officielles (Pajemploi, texte de la CC 3239) avant de les coder. Ne pas improviser une règle de paie.
 - Les paramètres du contrat (horaires, taux horaire, date d'effet) doivent être **versionnés par date**. Ils changeront avec les avenants, l'entrée en maternelle (septembre 2027) et le passage au CESU aux 6 ans de l'enfant.
 
-## Architecture (cible, pas encore implémentée)
+## Architecture (cible)
 
 - **Next.js (App Router, TypeScript)**, hébergé sur **Vercel** (déploiement automatique à chaque push sur `main`).
 - **Supabase** : Postgres + connexion par lien magique (email) + Row Level Security avec 2 rôles (`parent`, `nounou`).
@@ -50,4 +50,21 @@ Convention collective : particuliers employeurs et emploi à domicile, **IDCC 32
 
 ## Commandes
 
-Projet pas encore initialisé (le dépôt ne contient que le README). Ajoute ici les commandes de dev, de build, de lint et de tests (y compris comment lancer un seul test) dès la mise en place du projet Next.js.
+```bash
+npm run dev          # serveur local (nécessite .env.local, cf. .env.example)
+npm test             # tests unitaires (vitest)
+npx vitest run src/lib/paie/calcul.test.ts -t "maladie"   # un seul fichier / un seul test
+npm run typecheck
+npm run lint
+npm run build
+```
+
+**Next.js 16** : les API diffèrent de Next 14/15 (le middleware s'appelle désormais `src/proxy.ts`, les données dynamiques doivent être sous `<Suspense>` sinon le build échoue). Lis `AGENTS.md` et la doc embarquée `node_modules/next/dist/docs/` avant d'écrire du code Next.
+
+## Organisation du code
+
+- `src/lib/paie/` : moteur de paie pur (dates en chaînes `YYYY-MM-DD` heure de Paris, jours fériés, calcul mensuel). Toute règle de paie passe ici, avec un test.
+- `src/lib/agenda/` : lecture de l'agenda Google (iCal) → minutes de présence par jour. Les événements « journée entière » ne comptent pas comme heures.
+- `src/lib/donnees.ts` : assemble contrat + motifs (Supabase) + agenda → récap du mois.
+- `supabase/migrations/` : schéma SQL et RLS, appliqués à la main dans le SQL Editor de Supabase. Les comptes (3 personnes) et leur ligne `profils` sont créés à la main ; `signInWithOtp` utilise `shouldCreateUser: false`.
+- Connexion par lien magique via `/auth/confirm?token_hash=…` : le modèle d'e-mail Supabase « Magic Link » doit pointer vers cette route.

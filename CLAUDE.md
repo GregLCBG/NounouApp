@@ -13,7 +13,7 @@ Le propriétaire (Grégoire) n'est pas développeur : explique les étapes techn
 - **Les 2 parents** : corrigent si besoin, puis **clôturent le mois** pour obtenir le récap à déclarer sur Pajemploi.
 
 ### Périmètre
-- **Pas d'automatisation de pajemploi.urssaf.fr** : pas d'API ouverte aux particuliers, et un robot de navigation imposerait de stocker les identifiants URSSAF. L'app produit un **récap mensuel prêt à recopier** dans le formulaire Pajemploi. C'est Pajemploi qui édite le bulletin de salaire.
+- **La déclaration Pajemploi est automatisée de bout en bout** (exigence du propriétaire : rien à recopier). Pajemploi n'a pas d'API ouverte aux particuliers, donc un **robot de navigation (Playwright)** remplit et envoie le formulaire sur pajemploi.urssaf.fr. Un parent déclenche l'envoi d'un clic après la clôture du mois. C'est Pajemploi qui édite le bulletin de salaire ; le robot le récupère.
 - Le planning vit dans un **Google Agenda partagé** (voir Architecture).
 
 ## Règles métier (paie)
@@ -36,7 +36,12 @@ Convention collective : particuliers employeurs et emploi à domicile, **IDCC 32
 - **Supabase** : Postgres + connexion par lien magique (email) + Row Level Security avec 2 rôles (`parent`, `nounou`).
 - **Source du planning = Google Agenda partagé**, lu via son **adresse secrète au format iCal** (pas d'OAuth Google). Cette URL est un secret, à mettre en variable d'environnement, jamais dans le code. Un événement = une plage de présence réelle. L'app compare ces plages au contrat pour détecter les écarts.
 - **Calcul de paie = module TypeScript pur** (sans dépendance UI ni DB), couvert par des tests unitaires : c'est là que se trouve la valeur et le risque d'erreur.
-- **Workflow** : semaine → validée par la nounou (verrouillée ensuite) → mois clôturé par un parent → récap Pajemploi figé et historisé.
+- **Workflow** : semaine → validée par la nounou (verrouillée ensuite) → mois clôturé par un parent → clic « Déclarer » → robot Pajemploi → bulletin PDF et preuves historisés.
+- **Robot Pajemploi** : script Playwright exécuté par un **workflow GitHub Actions** (`workflow_dispatch`) que l'app déclenche via l'API GitHub. Il ne tourne ni sur Vercel (Chromium y est trop lourd) ni dans les sessions Claude Code cloud (pajemploi.urssaf.fr y est bloqué par le proxy). Les identifiants Pajemploi sont stockés **uniquement dans les secrets GitHub Actions**, jamais en base ni dans le code. Le robot doit :
+  - avoir un mode **dry-run** (remplit le formulaire, fait des captures d'écran, n'envoie rien) ; c'est le mode par défaut tant que le parcours n'a pas été validé en vrai ;
+  - garder une capture d'écran à chaque étape et renvoyer le statut à l'app ;
+  - s'arrêter net et alerter si la page ne correspond pas à ce qui est attendu (changement de site, captcha, code de double authentification). Ne jamais soumettre « à l'aveugle ».
+- Le parcours exact du formulaire Pajemploi n'est pas encore cartographié : il faut des captures du parcours réel, fournies par le propriétaire, avant d'écrire les sélecteurs.
 
 ### Pièges connus
 - Fuseau `Europe/Paris` partout, y compris lors des changements d'heure.
